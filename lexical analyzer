@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+int main() {
+    FILE *input;
+    int line_no = 1;
+    int token_no = 0;
+    int i, j, flag;
+    char ch;
+    char lexeme_buffer[50];
+
+    input = fopen("input.txt", "r");
+    if (input == NULL) {
+        printf("Error: Could not open input.txt\n");
+        return 1;
+    }
+
+    printf("Line no. \t Token no. \t\t Token \t\t Lexeme\n\n");
+
+    while ((ch = fgetc(input)) != EOF) {
+        i = 0;
+        flag = 0;
+
+        if (ch == ' ' || ch == '\t' || ch == '\r') {
+            continue;
+        } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+            printf("%7d\t\t %7d\t\t Operator\t %7c\n", line_no, token_no, ch);
+            token_no++;
+        } else if (ch == ';' || ch == '{' || ch == '}' || ch == '(' || ch == ')' ||
+                   ch == '?' || ch == '@' || ch == '!' || ch == '%') {
+            printf("%7d\t\t %7d\t\t Special symbol\t %7c\n", line_no, token_no, ch);
+            token_no++;
+        } else if (isdigit(ch)) {
+            lexeme_buffer[i++] = ch;
+            ch = fgetc(input);
+            while (isdigit(ch) && ch != EOF) {
+                lexeme_buffer[i++] = ch;
+                ch = fgetc(input);
+            }
+            if (ch == '.') {
+                lexeme_buffer[i++] = ch;
+                ch = fgetc(input);
+                while (isdigit(ch) && ch != EOF) {
+                    lexeme_buffer[i++] = ch;
+                    ch = fgetc(input);
+                }
+                if (ch != EOF) {
+                    ungetc(ch, input);
+                }
+                lexeme_buffer[i] = '\0';
+                printf("%7d\t\t %7d\t\t Float\t\t %7s\n", line_no, token_no, lexeme_buffer);
+            } else {
+                if (ch != EOF) {
+                    ungetc(ch, input);
+                }
+                lexeme_buffer[i] = '\0';
+                printf("%7d\t\t %7d\t\t Integer\t %7s\n", line_no, token_no, lexeme_buffer);
+            }
+            token_no++;
+        } else if (isalpha(ch)) {
+            lexeme_buffer[i++] = ch;
+            ch = fgetc(input);
+            while (isalnum(ch) && ch != EOF) {
+                lexeme_buffer[i++] = ch;
+                ch = fgetc(input);
+            }
+            if (ch != EOF) {
+                ungetc(ch, input);
+            }
+            lexeme_buffer[i] = '\0';
+            char keyword[6][10] = {"int", "main", "if", "else", "do", "while"};
+            flag = 0;
+            for (j = 0; j < 6; j++) {
+                if (strcmp(lexeme_buffer, keyword[j]) == 0) {
+                    flag = 1;
+                    break;
+                }
+            }
+            if (flag == 1) {
+                printf("%7d\t\t %7d\t\t Keyword\t %7s\n", line_no, token_no, lexeme_buffer);
+            } else {
+                printf("%7d\t\t %7d\t\t Identifier\t %7s\n", line_no, token_no, lexeme_buffer);
+            }
+            token_no++;
+        } else if (ch == '\n') {
+            line_no++;
+            token_no = 0;
+        }
+    }
+
+    fclose(input);
+    return 0;
+}
