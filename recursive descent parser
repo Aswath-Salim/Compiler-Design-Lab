@@ -11,14 +11,15 @@ char string[64];
 
 int main()
 {
-    puts("Enter the string");
+    puts("Enter the string ending with $ (e.g., i+i*i$):");
     scanf("%s", string);
     cursor = string;
+
     puts("");
     puts("Input          Action");
     puts("--------------------------------");
 
-    if (E() && *cursor == '\0')
+    if (E() && *cursor == '$' && *(cursor + 1) == '\0')
     {
         puts("--------------------------------");
         puts("String is successfully parsed");
@@ -42,15 +43,8 @@ int E()
         {
             return SUCCESS;
         }
-        else
-        {
-            return FAILED;
-        }
     }
-    else
-    {
-        return FAILED;
-    }
+    return FAILED;
 }
 
 int Edash()
@@ -66,15 +60,8 @@ int Edash()
             {
                 return SUCCESS;
             }
-            else
-            {
-                return FAILED;
-            }
         }
-        else
-        {
-            return FAILED;
-        }
+        return FAILED;
     }
     else
     {
@@ -93,15 +80,8 @@ int T()
         {
             return SUCCESS;
         }
-        else
-        {
-            return FAILED;
-        }
     }
-    else
-    {
-        return FAILED;
-    }
+    return FAILED;
 }
 
 int Tdash()
@@ -117,15 +97,8 @@ int Tdash()
             {
                 return SUCCESS;
             }
-            else
-            {
-                return FAILED;
-            }
         }
-        else
-        {
-            return FAILED;
-        }
+        return FAILED;
     }
     else
     {
@@ -148,15 +121,8 @@ int F()
                 cursor++;
                 return SUCCESS;
             }
-            else
-            {
-                return FAILED;
-            }
         }
-        else
-        {
-            return FAILED;
-        }
+        return FAILED;
     }
     else if (*cursor == 'i')
     {
@@ -164,8 +130,5 @@ int F()
         cursor++;
         return SUCCESS;
     }
-    else
-    {
-        return FAILED;
-    }
+    return FAILED;
 }
