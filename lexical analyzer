@@ -22,16 +22,59 @@ int main() {
         i = 0;
         flag = 0;
 
+        // Skip whitespaces
         if (ch == ' ' || ch == '\t' || ch == '\r') {
             continue;
-        } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
+        }
+
+        // Handle comments
+        if (ch == '/') {
+            char next_ch = fgetc(input);
+            if (next_ch == '/') {
+                // Single-line comment
+                while ((ch = fgetc(input)) != EOF && ch != '\n');
+                line_no++;
+                token_no = 0;
+                continue;
+            } else if (next_ch == '*') {
+                // Multi-line comment
+                while ((ch = fgetc(input)) != EOF) {
+                    if (ch == '*') {
+                        if ((ch = fgetc(input)) == '/') {
+                            break;
+                        } else {
+                            ungetc(ch, input);
+                        }
+                    } else if (ch == '\n') {
+                        line_no++;
+                        token_no = 0;
+                    }
+                }
+                continue;
+            } else {
+                // It's just a division operator
+                ungetc(next_ch, input);
+                printf("%7d\t\t %7d\t\t Operator\t %7c\n", line_no, token_no, ch);
+                token_no++;
+                continue;
+            }
+        }
+
+        // Operators
+        else if (ch == '+' || ch == '-' || ch == '*' || ch == '=' ) {
             printf("%7d\t\t %7d\t\t Operator\t %7c\n", line_no, token_no, ch);
             token_no++;
-        } else if (ch == ';' || ch == '{' || ch == '}' || ch == '(' || ch == ')' ||
-                   ch == '?' || ch == '@' || ch == '!' || ch == '%') {
+        }
+
+        // Special symbols
+        else if (ch == ';' || ch == '{' || ch == '}' || ch == '(' || ch == ')' ||
+                 ch == '?' || ch == '@' || ch == '!' || ch == '%') {
             printf("%7d\t\t %7d\t\t Special symbol\t %7c\n", line_no, token_no, ch);
             token_no++;
-        } else if (isdigit(ch)) {
+        }
+
+        // Numeric values
+        else if (isdigit(ch)) {
             lexeme_buffer[i++] = ch;
             ch = fgetc(input);
             while (isdigit(ch) && ch != EOF) {
@@ -58,7 +101,10 @@ int main() {
                 printf("%7d\t\t %7d\t\t Integer\t %7s\n", line_no, token_no, lexeme_buffer);
             }
             token_no++;
-        } else if (isalpha(ch)) {
+        }
+
+        // Identifiers and Keywords
+        else if (isalpha(ch)) {
             lexeme_buffer[i++] = ch;
             ch = fgetc(input);
             while (isalnum(ch) && ch != EOF) {
@@ -83,7 +129,10 @@ int main() {
                 printf("%7d\t\t %7d\t\t Identifier\t %7s\n", line_no, token_no, lexeme_buffer);
             }
             token_no++;
-        } else if (ch == '\n') {
+        }
+
+        // Newline
+        else if (ch == '\n') {
             line_no++;
             token_no = 0;
         }
