@@ -24,7 +24,7 @@ int main() {
 
         if (ch == ' ' || ch == '\t' || ch == '\r') {
             continue;
-        } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+        } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '=') {
             printf("%7d\t\t %7d\t\t Operator\t %7c\n", line_no, token_no, ch);
             token_no++;
         } else if (ch == ';' || ch == '{' || ch == '}' || ch == '(' || ch == ')' ||
