@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int tempVar = 1;
+
+void generate_TAC(char *expr) {
+    char stack[20][10];
+    int top = -1;
+    char postfix[50], temp[10];
+    int i = 0, j = 0;
+
+    // Convert infix to postfix
+    char opstack[20];
+    int optop = -1;
+
+    while (expr[i] != '\0') {
+        if (expr[i] == ' ')
+            i++;
+        else if (isalnum(expr[i])) {
+            postfix[j++] = expr[i++];
+        } else if (expr[i] == '(') {
+            opstack[++optop] = expr[i++];
+        } else if (expr[i] == ')') {
+            while (optop != -1 && opstack[optop] != '(') {
+                postfix[j++] = opstack[optop--];
+            }
+            optop--; // pop '('
+            i++;
+        } else {
+            while (optop != -1 && ((opstack[optop] == '*' || opstack[optop] == '/') ||
+                  ((opstack[optop] == '+' || opstack[optop] == '-') &&
+                   (expr[i] == '+' || expr[i] == '-'))))
+            {
+                postfix[j++] = opstack[optop--];
+            }
+            opstack[++optop] = expr[i++];
+        }
+    }
+    while (optop != -1) {
+        postfix[j++] = opstack[optop--];
+    }
+    postfix[j] = '\0';
+
+    // Generate TAC
+    printf("\nThree Address Code (TAC):\n");
+    for (i = 0; postfix[i] != '\0'; i++) {
+        if (isalnum(postfix[i])) {
+            char s[2] = {postfix[i], '\0'};
+            strcpy(stack[++top], s);
+        } else {
+            char op1[10], op2[10];
+            strcpy(op2, stack[top--]);
+            strcpy(op1, stack[top--]);
+
+            sprintf(temp, "t%d", tempVar++);
+            printf("%s = %s %c %s\n", temp, op1, postfix[i], op2);
+            strcpy(stack[++top], temp);
+        }
+    }
+
+    printf("a = %s\n", stack[top]);
+}
+
+int main() {
+    char expr[50];
+
+    printf("Enter an expression (e.g., (b + c) * (d - e)):\n");
+    fgets(expr, sizeof(expr), stdin);
+    expr[strcspn(expr, "\n")] = '\0';
+
+    generate_TAC(expr);
+    return 0;
+}
