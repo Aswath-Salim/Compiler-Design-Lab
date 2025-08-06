@@ -22,22 +22,54 @@ int main() {
         i = 0;
         flag = 0;
 
-        // Skip whitespaces
         if (ch == ' ' || ch == '\t' || ch == '\r') {
             continue;
         }
 
-        // Handle comments
+        if (ch == '#') {
+            lexeme_buffer[i++] = ch;
+            ch = fgetc(input);
+            while (isalpha(ch)) {
+                lexeme_buffer[i++] = ch;
+                ch = fgetc(input);
+            }
+            lexeme_buffer[i] = '\0';
+
+            if (strcmp(lexeme_buffer, "#include") == 0) {
+                printf("%7d\t\t %7d\t\t Preprocessor\t %7s\n", line_no, token_no, lexeme_buffer);
+                token_no++;
+
+                while (ch == ' ' || ch == '\t') {
+                    ch = fgetc(input);
+                }
+
+                i = 0;
+                if (ch == '<' || ch == '"') {
+                    char delimiter = (ch == '<') ? '>' : '"';
+                    ch = fgetc(input);
+                    while (ch != delimiter && ch != EOF && i < 49) {
+                        lexeme_buffer[i++] = ch;
+                        ch = fgetc(input);
+                    }
+                    lexeme_buffer[i] = '\0';
+                    printf("%7d\t\t %7d\t\t Header File\t %7s\n", line_no, token_no, lexeme_buffer);
+                    token_no++;
+                }
+            } else {
+                printf("%7d\t\t %7d\t\t Preprocessor\t %7s\n", line_no, token_no, lexeme_buffer);
+                token_no++;
+            }
+            continue;
+        }
+
         if (ch == '/') {
             char next_ch = fgetc(input);
             if (next_ch == '/') {
-                // Single-line comment
                 while ((ch = fgetc(input)) != EOF && ch != '\n');
                 line_no++;
                 token_no = 0;
                 continue;
             } else if (next_ch == '*') {
-                // Multi-line comment
                 while ((ch = fgetc(input)) != EOF) {
                     if (ch == '*') {
                         if ((ch = fgetc(input)) == '/') {
@@ -52,7 +84,6 @@ int main() {
                 }
                 continue;
             } else {
-                // It's just a division operator
                 ungetc(next_ch, input);
                 printf("%7d\t\t %7d\t\t Operator\t %7c\n", line_no, token_no, ch);
                 token_no++;
@@ -60,20 +91,17 @@ int main() {
             }
         }
 
-        // Operators
-        else if (ch == '+' || ch == '-' || ch == '*' || ch == '=' ) {
+        if (ch == '+' || ch == '-' || ch == '*' || ch == '=') {
             printf("%7d\t\t %7d\t\t Operator\t %7c\n", line_no, token_no, ch);
             token_no++;
         }
 
-        // Special symbols
         else if (ch == ';' || ch == '{' || ch == '}' || ch == '(' || ch == ')' ||
                  ch == '?' || ch == '@' || ch == '!' || ch == '%') {
             printf("%7d\t\t %7d\t\t Special symbol\t %7c\n", line_no, token_no, ch);
             token_no++;
         }
 
-        // Numeric values
         else if (isdigit(ch)) {
             lexeme_buffer[i++] = ch;
             ch = fgetc(input);
@@ -103,11 +131,10 @@ int main() {
             token_no++;
         }
 
-        // Identifiers and Keywords
         else if (isalpha(ch)) {
             lexeme_buffer[i++] = ch;
             ch = fgetc(input);
-            while (isalnum(ch) && ch != EOF) {
+            while ((isalnum(ch) || ch == '_') && ch != EOF) {
                 lexeme_buffer[i++] = ch;
                 ch = fgetc(input);
             }
@@ -131,7 +158,6 @@ int main() {
             token_no++;
         }
 
-        // Newline
         else if (ch == '\n') {
             line_no++;
             token_no = 0;
