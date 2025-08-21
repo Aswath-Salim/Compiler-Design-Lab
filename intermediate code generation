@@ -10,7 +10,7 @@ void generate_TAC(char *expr) {
     char postfix[50], temp[10];
     int i = 0, j = 0;
 
-    // Convert infix to postfix
+
     char opstack[20];
     int optop = -1;
 
@@ -42,7 +42,17 @@ void generate_TAC(char *expr) {
     }
     postfix[j] = '\0';
 
-    // Generate TAC
+
+    printf("\nPostfix Expression: %s\n", postfix);
+
+
+    char opArr[20];
+    char arg1Arr[20][10];
+    char arg2Arr[20][10];
+    char resArr[20][10];
+    int quadIndex = 0;
+
+
     printf("\nThree Address Code (TAC):\n");
     for (i = 0; postfix[i] != '\0'; i++) {
         if (isalnum(postfix[i])) {
@@ -55,17 +65,31 @@ void generate_TAC(char *expr) {
 
             sprintf(temp, "t%d", tempVar++);
             printf("%s = %s %c %s\n", temp, op1, postfix[i], op2);
+
+
+            opArr[quadIndex] = postfix[i];
+            strcpy(arg1Arr[quadIndex], op1);
+            strcpy(arg2Arr[quadIndex], op2);
+            strcpy(resArr[quadIndex], temp);
+            quadIndex++;
+
             strcpy(stack[++top], temp);
         }
     }
-
     printf("a = %s\n", stack[top]);
+
+
+    printf("\nQuadruple Table:\n");
+    printf("%-10s %-10s %-10s %-10s\n", "Op", "Arg1", "Arg2", "Result");
+    for (i = 0; i < quadIndex; i++) {
+        printf("%-10c %-10s %-10s %-10s\n", opArr[i], arg1Arr[i], arg2Arr[i], resArr[i]);
+    }
 }
 
 int main() {
     char expr[50];
 
-    printf("Enter an expression (e.g., (b + c) * (d - e)):\n");
+    printf("Enter an expression :\n");
     fgets(expr, sizeof(expr), stdin);
     expr[strcspn(expr, "\n")] = '\0';
 
