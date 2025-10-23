@@ -1,0 +1,184 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Maximum limits
+#define MAX 20
+
+// Structure for NFA transition list
+struct Node {
+    int state;
+    struct Node *next;
+};
+
+// Structure for DFA state (set of NFA states)
+struct StateSet {
+    int states[MAX];
+};
+
+// Global variables
+int numStates, numSymbols, numTransitions, numFinals;
+int startState, finalStates[MAX];
+char symbols[MAX];
+struct Node *transitions[MAX][MAX]; // NFA transitions
+struct StateSet dfaStates[MAX];
+int dfaFinal[MAX], dfaCount = -1;
+
+// Function declarations
+void insertTransition(int from, char symbol, int to);
+int findSymbolIndex(char c);
+int compareStates(struct StateSet a, struct StateSet b);
+int addDFAState(struct StateSet s);
+void printState(struct StateSet s);
+void findDFAFinals();
+
+// -------------------- MAIN --------------------
+int main() {
+    int i, j, k;
+    struct Node *temp;
+    struct StateSet curr, next;
+
+    printf("Enter number of input symbols: ");
+    scanf("%d", &numSymbols);
+    printf("Enter symbols: ");
+    for (i = 0; i < numSymbols; i++)
+        scanf(" %c", &symbols[i]);
+
+    printf("Enter number of NFA states: ");
+    scanf("%d", &numStates);
+
+    printf("Enter start state: ");
+    scanf("%d", &startState);
+
+    printf("Enter number of final states: ");
+    scanf("%d", &numFinals);
+    printf("Enter final states: ");
+    for (i = 0; i < numFinals; i++)
+        scanf("%d", &finalStates[i]);
+
+    printf("Enter number of transitions: ");
+    scanf("%d", &numTransitions);
+    printf("Enter transitions (from symbol to):\n");
+    for (i = 0; i < numTransitions; i++) {
+        int from, to; char sym;
+        scanf("%d %c %d", &from, &sym, &to);
+        insertTransition(from, sym, to);
+    }
+
+    printf("\n--- Equivalent DFA ---\n");
+    printf("Transitions:\n");
+
+    // Start DFA construction
+    memset(&curr, 0, sizeof(curr));
+    curr.states[startState] = startState;
+    addDFAState(curr);
+
+    for (i = 0; i <= dfaCount; i++) {
+        curr = dfaStates[i];
+
+        for (k = 0; k < numSymbols; k++) {
+            memset(&next, 0, sizeof(next));
+
+            // For each NFA state in current DFA state
+            for (j = 1; j <= numStates; j++) {
+                if (curr.states[j]) {
+                    temp = transitions[j][k];
+                    while (temp) {
+                        next.states[temp->state] = temp->state;
+                        temp = temp->next;
+                    }
+                }
+            }
+
+            // Print transition
+            printState(curr);
+            printf("--%c--> ", symbols[k]);
+            if (memcmp(&next, &(struct StateSet){0}, sizeof(next)) == 0)
+                printf("{} (NULL)\n");
+            else {
+                printState(next);
+                printf("\n");
+                addDFAState(next);
+            }
+        }
+    }
+
+    printf("\nDFA States:\n");
+    for (i = 0; i <= dfaCount; i++)
+        printState(dfaStates[i]);
+
+    printf("\nInput Symbols:\n");
+    for (i = 0; i < numSymbols; i++)
+        printf("%c ", symbols[i]);
+
+    printf("\nStart State: q%d", startState);
+    printf("\nFinal States:\n");
+    findDFAFinals();
+
+    return 0;
+}
+
+// -------------------- FUNCTIONS --------------------
+
+// Insert transition into NFA
+void insertTransition(int from, char symbol, int to) {
+    int idx = findSymbolIndex(symbol);
+    if (idx == -1) {
+        printf("Invalid symbol '%c'\n", symbol);
+        exit(1);
+    }
+
+    struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
+    newNode->state = to;
+    newNode->next = transitions[from][idx];
+    transitions[from][idx] = newNode;
+}
+
+// Find index of a symbol
+int findSymbolIndex(char c) {
+    for (int i = 0; i < numSymbols; i++)
+        if (symbols[i] == c)
+            return i;
+    return -1;
+}
+
+// Compare two DFA states
+int compareStates(struct StateSet a, struct StateSet b) {
+    for (int i = 1; i <= numStates; i++)
+        if (a.states[i] != b.states[i])
+            return 0;
+    return 1;
+}
+
+// Add new DFA state if not already added
+int addDFAState(struct StateSet s) {
+    for (int i = 0; i <= dfaCount; i++)
+        if (compareStates(dfaStates[i], s))
+            return 0; // already present
+
+    dfaStates[++dfaCount] = s;
+
+    // Mark as final if it includes any NFA final state
+    dfaFinal[dfaCount] = 0;
+    for (int i = 1; i <= numStates; i++)
+        for (int j = 0; j < numFinals; j++)
+            if (s.states[i] == finalStates[j])
+                dfaFinal[dfaCount] = 1;
+    return 1;
+}
+
+// Print DFA state
+void printState(struct StateSet s) {
+    printf("{");
+    for (int i = 1; i <= numStates; i++)
+        if (s.states[i])
+            printf("q%d,", s.states[i]);
+    printf("}");
+}
+
+// Print all final DFA states
+void findDFAFinals() {
+    for (int i = 0; i <= dfaCount; i++)
+        if (dfaFinal[i])
+            printState(dfaStates[i]), printf("\n");
+}
